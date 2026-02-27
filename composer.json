@@ -1,0 +1,16 @@
+{
+  "name": "phenome/wordpress",
+  "description": "Phenome WordPress site — child theme and tooling",
+  "type": "project",
+  "license": "proprietary",
+  "config": {
+    "allow-plugins": {}
+  },
+  "require": {
+    "dompdf/dompdf": "^2.0"
+  },
+  "require-dev": {
+    "php-stubs/woocommerce-stubs": "*",
+    "php-stubs/wordpress-stubs": "*"
+  }
+}

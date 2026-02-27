@@ -12,8 +12,8 @@ function my_generate_pdf()
     //     die('Invalid security token');
     // }
 
-    // Generate the PDF using dompdf
-    include_once get_stylesheet_directory() . '/admin/dompdf/autoload.inc.php';
+    // Load Composer autoload (dompdf) from repo root
+    require_once ABSPATH . 'vendor/autoload.php';
 
 
     // Get the order object
@@ -47,15 +47,15 @@ function my_generate_pdf()
     // $items = $order->get_items();
 
     foreach ($order->get_items() as $item_id => $item_obj) {
-                $data = wc_get_order_item_meta($item_id, 'ccb_calculator');
+        $data = wc_get_order_item_meta($item_id, 'ccb_calculator');
 
         $snakes = wc_get_order_item_meta($item_id, 'snakes_panel', true);
         if (!empty($snakes)) {
             ob_start();
             $i = 1;
-           
+
             foreach ($snakes as $snake) {
-                 echo ' <table style="width:100%;margin-bottom:25px"> <tbody>';
+                echo ' <table style="width:100%;margin-bottom:25px"> <tbody>';
                 $snake_id = sanitize_text_field($snake['id']);
                 $known_genetics = sanitize_text_field($snake['genetics']);
 
@@ -79,7 +79,6 @@ function my_generate_pdf()
                 $i++;
                 echo ' </tbody> </table>';
             }
-
         } else {
 
 
@@ -125,14 +124,11 @@ function my_generate_pdf()
                                             if ($value3 != '') {
                                                 $snakeitems[] = $value3;
                                             }
-
                                         }
                                         if ($detail['label'] == "Select Test") {
                                             $testtype = 'Main Test';
-
                                         } elseif ($detail['label'] == "Pick 3 Tests") {
                                             $testtype = '3 Tests';
-
                                         } else {
                                             $testtype = 'Secondary Test';
                                         }
@@ -160,7 +156,6 @@ function my_generate_pdf()
 
                                     if ($detail['label'] == "Select Test") {
                                         $testtype = 'Main Test';
-
                                     } else {
                                         $testtype = 'Secondary Test';
                                     }
@@ -178,33 +173,33 @@ function my_generate_pdf()
                                         echo '</td></tr>';
                                     }
                                     ?>
-                                <?php } else {
+                                    <?php } else {
                                     if ($detail['label'] != 'Comment') {
-                                        ?>
+                                    ?>
                                         <?php echo '<tr><td><strong>' . $detail['label'] . '</strong></td><td style="text-align: right;">' . $detail['value'] . '</td></tr>'; ?>
-                                    <?php }
+                                <?php }
                                 } ?>
 
                             <?php endforeach; ?>
                             <?php if ($data['product_id'] == 5593) {
                                 echo
-                                    $currenttesresult = wc_get_order_item_meta($item_id, '_main_test_result_' . $i . '_0');
+                                $currenttesresult = wc_get_order_item_meta($item_id, '_main_test_result_' . $i . '_0');
                                 echo '<tr>';
                                 // if($post->ID == '4340'){
                                 // 	echo '<a class="editable" href="#" id="test__data_'.$i.'_'.$ii.'" data-type="select" data-source="/wp-admin/admin-ajax.php?action=get_test_options&type=maintest"  data-itemid="'.$item_id.'" data-pk="'.$detail['key'].'"  data-title="Select '.($detail['label']=="Select Test"?"Main Test":"Secondary Test").'">'.$value.'</a>';
                                 // }else{
                                 // 	echo $value;
                                 // }
-        
+
                                 echo '<td>Result</td><td style="text-align: right;">'; ?>
                                 <?php echo $currenttesresult; ?>
-                                <?php echo '</td></tr>';
+                            <?php echo '</td></tr>';
                             } ?>
                             <?php $i++; ?>
                         </tbody>
                     </table>
                 <?php endforeach; ?>
-            <?php }
+<?php }
         }
         $html .= ob_get_clean();
     }
@@ -225,5 +220,4 @@ function my_generate_pdf()
     echo $pdf_base64;
 
     wp_die();
-
 }

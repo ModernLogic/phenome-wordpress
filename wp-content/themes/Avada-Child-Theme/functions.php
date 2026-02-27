@@ -38,14 +38,6 @@ add_action('admin_enqueue_scripts', 'enqueue_xeditable_assets');
 function enqueue_admin_custom_script()
 {
 
-    // wp_enqueue_script('jqueryui-custom-script', get_stylesheet_directory_uri() . '/admin/jqueryui-editable/js/jquery-ui-1.10.1.custom.min.js', array('jquery'), '1.0', true);
-    // wp_enqueue_style('jqueryui-custom-style', get_stylesheet_directory_uri() . '/admin/jqueryui-editable/css/jquery-ui-1.10.1.custom.css', [] );
-
-
-    // wp_enqueue_script('jqueryui-editable-script', get_stylesheet_directory_uri() . '/admin/jqueryui-editable/js/jqueryui-editable.min.js', array('jquery'), '1.0', true);
-
-    // wp_enqueue_style('jqueryui-editable-style', get_stylesheet_directory_uri() . '/admin/jqueryui-editable/css/jqueryui-editable.css', [] );
-
     wp_enqueue_script('custom-admin-script', get_stylesheet_directory_uri() . '/admin/js/admin-order.js?t=' . time(), array('jquery'), '1.0', true);
 
     // Localize script to pass data from PHP to JS
@@ -64,7 +56,6 @@ function theme_enqueue_styles()
         'nonce' => wp_create_nonce('custom_admin_nonce')
     ));
     wp_enqueue_style('child-style', get_stylesheet_directory_uri() . '/style.css', []);
-
 }
 
 add_action('wp_enqueue_scripts', 'theme_enqueue_styles', 20);
@@ -83,7 +74,6 @@ function avada_lang_setup()
     $lang = get_stylesheet_directory() . '/languages';
 
     load_child_theme_textdomain('Avada', $lang);
-
 }
 
 add_action('after_setup_theme', 'avada_lang_setup');
@@ -93,7 +83,6 @@ function order_details_after_order_table_callback($order)
 {
     $order_id = $order->get_id();
     echo '<button type="button" class="button generate-pdf" data-pathh="' . WP_CONTENT_DIR . '" data-order-id="' . esc_attr($order_id) . '">Generate Test PDF</button>&nbsp;<button type="button" class="button generate-labels" data-pathh="' . WP_CONTENT_DIR . '" data-order-id="' . esc_attr($order_id) . '">Generate Labels</button>';
-
 }
 
 add_action('woocommerce_order_item_add_action_buttons', 'wc_order_item_add_action_buttons_callback', 10, 1);
@@ -101,21 +90,20 @@ function wc_order_item_add_action_buttons_callback($order)
 {
     $order_id = $order->get_id();
     echo '<button type="button" class="button generate-pdf" data-pathh="' . WP_CONTENT_DIR . '" data-order-id="' . esc_attr($order_id) . '">Generate Test PDF</button>&nbsp;<button type="button" class="button generate-labels" data-pathh="' . WP_CONTENT_DIR . '" data-order-id="' . esc_attr($order_id) . '">Generate Labels</button>&nbsp;<button type="button" class="button generate-emaill" data-pathh="' . WP_CONTENT_DIR . '" data-order-id="' . esc_attr($order_id) . '">Generate Email</button>';
-
 }
 
 function shedtest_change_quantity_input($product_quantity, $cart_item_key, $cart_item)
 {
     $product_id = $cart_item['product_id'];
     // whatever logic you want to determine whether or not to alter the input
-     $tests = get_post_meta($product_id, '_snake_tests', true) ?: [];
+    $tests = get_post_meta($product_id, '_snake_tests', true) ?: [];
     $recessives = get_post_meta($product_id, '_snake_recessive_tests', true) ?: [];
     $pricing_array = get_post_meta($product_id, '_snake_pricing', true) ?: '';
-   $full_panel_threshold = get_post_meta($product_id, '_snake_full_panel_threshold', true) ?: '';
+    $full_panel_threshold = get_post_meta($product_id, '_snake_full_panel_threshold', true) ?: '';
 
 
 
-    if ($product_id == 1020 || $product_id == 4403 || (!empty($tests) && !empty($recessives) && !empty($pricing_array) && $full_panel_threshold !='')) {
+    if ($product_id == 1020 || $product_id == 4403 || (!empty($tests) && !empty($recessives) && !empty($pricing_array) && $full_panel_threshold != '')) {
         return '<span>' . $cart_item['quantity'] . '</span>';
     }
 
@@ -146,7 +134,10 @@ function add_aria_labels_from_screen_reader_text($items, $args)
             if ($screenReaderText->length > 0 && $link->length > 0) {
                 $ariaLabel = trim($screenReaderText->item(0)->nodeValue);
                 if ($ariaLabel) {
-                    $link->item(0)->setAttribute('aria-label', $ariaLabel);
+                    $linkNode = $link->item(0);
+                    if ($linkNode instanceof DOMElement) {
+                        $linkNode->setAttribute('aria-label', $ariaLabel);
+                    }
                 }
             }
         }

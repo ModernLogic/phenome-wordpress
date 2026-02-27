@@ -7,14 +7,12 @@ function my_generate_labels()
 
     $order_id = isset($_POST['order_id']) ? intval($_POST['order_id']) : 0;
 
-    include_once get_stylesheet_directory() . '/admin/dompdf/autoload.inc.php';
-
+    require_once ABSPATH . 'vendor/autoload.php';
 
     // Get the order object
     $order = wc_get_order($order_id);
     $mz_first_name = $order->get_billing_first_name();
     $mz_last_name = $order->get_billing_last_name();
-
 
     $html = '<!DOCTYPE html><html><head><title>Test Report</title>';
     $html .= '<style>.logo { float: left; width: 40%; margin-right: 80px; } .text { float: left; width: 60%; padding-left: 20px; } .table { clear: both; width: 100%; margin-top: 20px; border:0px; } body { font-family: Arial, sans-serif; } th { text-align:left; border-bottom: 1px solid; padding: 5px; border-left:1px solid black; } td { border-bottom: 1px solid; padding: 5px; border-right:1px solid black; } table {border-top: 1px solid;border-collapse: collapse;  } .longtext {clear: both;width: 100%;}</style>';
@@ -25,39 +23,38 @@ function my_generate_labels()
         $snakes = wc_get_order_item_meta($item_id, 'snakes_panel', true);
         if (!empty($snakes)) {
             ob_start();
-          $test_count = 0; // Global counter
+            $test_count = 0; // Global counter
 
-foreach ($snakes as $snake) {
-    $snake_id = sanitize_text_field($snake['id']);
-    $known_genetics = sanitize_text_field($snake['genetics']);
-    $tests = $snake['tests'] ?? [];
+            foreach ($snakes as $snake) {
+                $snake_id = sanitize_text_field($snake['id']);
+                $known_genetics = sanitize_text_field($snake['genetics']);
+                $tests = $snake['tests'] ?? [];
 
-    foreach ($tests as $test) {
-        echo "<table class='table'> <tbody>";
-        echo '<tr style="border-top:1px solid black;border-bottom:0px;"><th>Name & Company</th>';
-        echo '<td>' . $mz_first_name . ' ' . $mz_last_name . '</td></tr>';
-        echo '<tr><th>Order #</th>';
-        echo '<td>' . $order_id . '</td></tr>';
-        echo '<tr><th>Snake ID #</th>';
-        echo '<td>' . $snake_id . '</td></tr>';
-        echo '<tr><th>Test</th>';
-        echo '<td>' . $test . '</td></tr>';
-        echo '<tr><th>Known Genetics</th>';
-        echo '<td>' . $known_genetics . '</td></tr>';
-        echo "</tbody></table>";
+                foreach ($tests as $test) {
+                    echo "<table class='table'> <tbody>";
+                    echo '<tr style="border-top:1px solid black;border-bottom:0px;"><th>Name & Company</th>';
+                    echo '<td>' . $mz_first_name . ' ' . $mz_last_name . '</td></tr>';
+                    echo '<tr><th>Order #</th>';
+                    echo '<td>' . $order_id . '</td></tr>';
+                    echo '<tr><th>Snake ID #</th>';
+                    echo '<td>' . $snake_id . '</td></tr>';
+                    echo '<tr><th>Test</th>';
+                    echo '<td>' . $test . '</td></tr>';
+                    echo '<tr><th>Known Genetics</th>';
+                    echo '<td>' . $known_genetics . '</td></tr>';
+                    echo "</tbody></table>";
 
-        $test_count++;
+                    $test_count++;
 
-        // Global page break after every 5 tests
-        if ($test_count % 5 == 0) {
-            echo '<div style="page-break-after: always;"></div>';
-        }
-    }
-}
+                    // Global page break after every 5 tests
+                    if ($test_count % 5 == 0) {
+                        echo '<div style="page-break-after: always;"></div>';
+                    }
+                }
+            }
 
 
             $html .= ob_get_clean();
-
         } else {
             $data = wc_get_order_item_meta($item_id, 'ccb_calculator');
 
@@ -125,7 +122,7 @@ foreach ($snakes as $snake) {
                                     echo "</tbody></table>";
                                 endforeach;
                             }
-                        ?>
+                            ?>
                         <?php } else if ($detail['label'] == "Select Test") {
                             $value = removeTrailingNumber($detail['value']);
                             $value = removeBrackets($value);
@@ -159,7 +156,7 @@ foreach ($snakes as $snake) {
                         echo '<td>' . $Genetics . '</td></tr>';
                         echo "</tbody></table>";
                     }
-                ?>
+                    ?>
                 <?php endforeach; ?>
 
                 <?php
@@ -185,5 +182,4 @@ foreach ($snakes as $snake) {
     echo $pdf_base64;
 
     wp_die();
-
 }

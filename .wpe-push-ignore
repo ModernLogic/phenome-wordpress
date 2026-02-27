@@ -1,0 +1,7 @@
+# Exclude from WP Engine git push deployment (dev-only / tooling)
+.vscode/
+*.log
+.DS_Store
+composer.json
+composer.lock
+README.md

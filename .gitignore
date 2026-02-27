@@ -1,21 +1,7 @@
-# ignore everything by default
-*
 
-# but keep git metadata
-!.gitignore
+/vendor/
 
-# allow directories so we can unignore inside them
-!wp-content/
-
-wp-content/*
-
-!wp-content/themes
-
-wp-content/themes/*
-
-# whitelist ONLY what you want to control
-!wp-content/themes/Avada-Child-Theme/**
-
+!phenome-wordpress.code-workspace
 
 # Common ignore patterns
 *~
