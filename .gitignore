@@ -1,0 +1,106 @@
+# Common ignore patterns
+*~
+.github
+.DS_Store
+.svn
+.cvs
+*.bak
+*.swp
+Thumbs.db
+
+# WP Engine Specific
+.smushit-status
+_wpeprivate
+/wp-content/drop-ins/
+/wp-content/mu-plugins/force-strong-passwords*
+/wp-content/mu-plugins/local-by-flywheel-live-link-helper*
+/wp-content/mu-plugins/mu-plugin*
+/wp-content/mu-plugins/slt-force-strong-passwords*
+/wp-content/mu-plugins/stop-long-comments*
+/wp-content/mu-plugins/wpe-cache-plugin*
+/wp-content/mu-plugins/wpe-elasticpress-autosuggest-logger*
+/wp-content/mu-plugins/wpe-update-source-selector*
+/wp-content/mu-plugins/wp-cache-memcached*
+/wp-content/mu-plugins/wpengine-common*
+/wp-content/mu-plugins/wpengine-security-auditor*
+/wp-content/mu-plugins/wpe-wp-sign-on-plugin*
+
+### WordPress Core (as of WordPress 6.8.2)
+#
+# Critical for security, should NEVER be committed
+wp-config.php
+# Directories
+/wp-admin/
+/wp-includes/
+# Files in the root directory
+/index.php
+/license.txt
+/readme.html
+/wp-activate.php
+/wp-blog-header.php
+/wp-comments-post.php
+/wp-config-sample.php
+/wp-cron.php
+/wp-links-opml.php
+/wp-load.php
+/wp-login.php
+/wp-mail.php
+/wp-settings.php
+/wp-signup.php
+/wp-trackback.php
+/xmlrpc.php
+# Default Themes
+/wp-content/themes/index.php
+/wp-content/themes/twentytwenty*
+# Default Plugins
+/wp-content/plugins/index.php
+/wp-content/plugins/hello.php
+/wp-content/plugins/akismet/
+# WordPress Content and Cache
+/wp-content/advanced-cache.php
+/wp-content/backup-db/
+/wp-content/blogs.dir/
+/wp-content/cache/
+/wp-content/index.php
+/wp-content/mysql.sql
+/wp-content/object-cache.php
+/wp-content/upgrade-temp-backup/
+/wp-content/upgrade/
+/wp-content/uploads/
+/wp-content/wp-cache-config.php
+
+# large/disallowed file types
+# a CDN should be used for these
+*.hqx
+*.bin
+*.exe
+*.dll
+*.deb
+*.dmg
+*.iso
+*.img
+*.msi
+*.msp
+*.msm
+*.mid
+*.midi
+*.kar
+*.mp3
+*.ogg
+*.m4a
+*.ra
+*.3gpp
+*.3gp
+*.mp4
+*.mpeg
+*.mpg
+*.mov
+*.webm
+*.flv
+*.m4v
+*.mng
+*.asx
+*.asf
+*.wmv
+*.avi
+
