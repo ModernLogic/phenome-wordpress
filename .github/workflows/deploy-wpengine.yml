@@ -1,0 +1,40 @@
+# Deploy to WP Engine and run composer install on the server.
+# Uses WP Engine GitHub Action (SSH + rsync), then runs bin/post-deploy.sh remotely.
+#
+# Required secrets: WPE_SSHG_KEY_PRIVATE (WP Engine SSH Gateway private key)
+#
+# Branch -> environment: staging -> phenomestg, production -> phenomeprd
+# Add repo secret WPE_SSHG_KEY_PRIVATE (WP Engine SSH Gateway private key)
+name: Deploy to WP Engine
+on:
+  push:
+    branches:
+      - staging
+      - production
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'phenomestg'
+        type: choice
+        options:
+          - phenomestg
+          - phenomeprd
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event_name == 'workflow_dispatch' && (github.event.inputs.environment == 'phenomestg' && 'staging' || 'production') || github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy to WP Engine
+        uses: wpengine/github-action-wpe-site-deploy@v3
+        with:
+          # Repo secret (Settings > Secrets and variables > Actions). Linter warning is a false positive for custom secrets.
+          WPE_SSHG_KEY_PRIVATE: ${{ secrets.WPE_SSHG_KEY_PRIVATE || '' }}
+          WPE_ENV: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment || (github.ref_name == 'staging' && 'phenomestg' || 'phenomeprd') }}
+          # Deploy repo root to WordPress root so composer.json and vendor/ live at ABSPATH
+          REMOTE_PATH: .
+          # Run composer install on the server after rsync
+          SCRIPT: bin/post-deploy.sh

@@ -5,7 +5,6 @@
 
 # Common ignore patterns
 *~
-.github
 .DS_Store
 .svn
 .cvs

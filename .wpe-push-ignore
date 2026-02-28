@@ -1,7 +1,6 @@
 # Exclude from WP Engine git push deployment (dev-only / tooling)
+# composer.json and composer.lock are included so post-deploy can run composer install
 .vscode/
 *.log
 .DS_Store
-composer.json
-composer.lock
 README.md
