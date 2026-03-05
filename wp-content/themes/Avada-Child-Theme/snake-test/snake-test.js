@@ -82,7 +82,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const tests = row["Test"] || "";
 
         const testArray = tests.split(",").map((t) => t.trim());
-        const snakeForm = addSnakeFormCsv(snakeId, knownGenetics, testArray);
+        const snakeForm = addReptileFormCsv(snakeId, knownGenetics, testArray);
         updateSnakePrice(snakeForm);
       });
 
@@ -178,7 +178,7 @@ function deselectAll(formEl) {
   updateSnakePrice(formEl);
 }
 
-function addSnakeFormCsv(snakeId = "", knownGenetics = "", testArray = "") {
+function addReptileFormCsv(snakeId = "", knownGenetics = "", testArray = "") {
   const templateEl = document.getElementById("snake-form-template");
   if (!templateEl) {
     console.error("Template element not found");
@@ -218,7 +218,7 @@ function addSnakeFormCsv(snakeId = "", knownGenetics = "", testArray = "") {
   return formEl;
 }
 
-function addSnakeForm() {
+function addReptileForm() {
   const templateEl = document.getElementById("snake-form-template");
   if (!templateEl) {
     console.error("Template element not found");
@@ -330,11 +330,10 @@ document.addEventListener("DOMContentLoaded", () => {
       const form = e.target.closest(".snake-form");
       const checked = form.querySelectorAll('input[type="checkbox"]:checked');
       if (
-        form
-          .querySelector(".select-recessive-btn").classList.contains("active")
+        form.querySelector(".select-recessive-btn").classList.contains("active")
       ) {
         if (checked.length > recessives.length) {
-              e.target.checked = false;
+          e.target.checked = false;
           return;
         }
         if (recessives.includes(e.target.value)) {
@@ -343,8 +342,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       if (
-        form
-          .querySelector(".deselect-all-btn").classList.contains("active")
+        form.querySelector(".deselect-all-btn").classList.contains("active")
       ) {
         console.log(checked.length);
         if (checked.length > 10) {
