@@ -77,18 +77,21 @@ function custom_snake_form_multiple()
                 // user is an admin
             ?>
                 <!-- Upload Section -->
-                <div class="upload-content" id="drop-zone">
-                    <div class="upload-icon">
-                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none">
-                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="currentColor"
-                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
-                        </svg>
+                <!--
+                    [arahn 03/04/2026] Disabled, per Sierra's request in today's meeting.
+                    <div class="upload-content" id="drop-zone">
+                        <div class="upload-icon">
+                            <svg width="64" height="64" viewBox="0 0 24 24" fill="none">
+                                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                            </svg>
+                        </div>
+                        <h3 class="upload-title">Drop files here or click to upload</h3>
+                        <p class="upload-subtitle">Strictly CSV file only.</p>
+                        <button class="upload-button" type="button" id="upload-btn">Choose Files</button>
+                        <input type="file" id="csv-upload" accept=".csv" hidden>
                     </div>
-                    <h3 class="upload-title">Drop files here or click to upload</h3>
-                    <p class="upload-subtitle">Strictly CSV file only.</p>
-                    <button class="upload-button" type="button" id="upload-btn">Choose Files</button>
-                    <input type="file" id="csv-upload" accept=".csv" hidden>
-                </div>
+                -->
 
                 <div class="section-separator">
                     <span>or manually add below</span>
@@ -101,7 +104,7 @@ function custom_snake_form_multiple()
             </div>
         </div>
         <div class="form_bottom">
-            <button type="button" class="button alt" id="add-snake-btn" onclick="addSnakeForm()">+ Add Another Snake</button>
+            <button type="button" class="button alt" id="add-snake-btn" onclick="addReptileForm()">+ Add Another Reptile</button>
             <div class="total__price"><strong>Total Price: <span id="grand-total">$0.00</span></strong></div>
         </div>
         <style>
@@ -122,7 +125,7 @@ function get_snake_form_html($tests)
 {
     ob_start(); ?>
     <div class="snake-form" data-index="0">
-        <label>Snake ID: <input type="text" class="snake-id-input" name="snake_id[0]" required></label><br>
+        <label>Reptile ID: <input type="text" class="snake-id-input" name="snake_id[0]" required></label><br>
         <label>Known Genetics: <input type="text" class="genetics-input" name="known_genetics[0]"></label><br><br>
         <div class="action-buttons">
             <button type="button" class="select-all-btn  button alt">Select All (Full Panel)</button>
