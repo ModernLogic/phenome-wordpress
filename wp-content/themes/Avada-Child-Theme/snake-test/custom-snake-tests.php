@@ -28,7 +28,7 @@ function snake_test_enqueue_styles()
         $pricing_array = get_post_meta($product_id, '_snake_pricing', true) ?: '';
         $full_panel_threshold = get_post_meta($product_id, '_snake_full_panel_threshold', true) ?: '';
 
-        if (!empty($tests) && !empty($recessives) && !empty($pricing_array) && $full_panel_threshold != '') {
+        if (!empty($tests) && !empty($pricing_array) && $full_panel_threshold != '') {
 
 
 
@@ -64,7 +64,7 @@ function custom_snake_form_multiple()
     $full_panel_threshold = get_post_meta($post->ID, '_snake_full_panel_threshold', true) ?: '';
 
     // Check if all exist and are not empty
-    if (!empty($tests) && !empty($recessives) && !empty($pricing_string) && $full_panel_threshold != '') {
+    if (!empty($tests) && !empty($pricing_string) && $full_panel_threshold != '') {
 
         // Only load on a specific product if needed (e.g., by ID)
         // if (!is_product(123)) return;
@@ -73,7 +73,7 @@ function custom_snake_form_multiple()
         <div id="snake-forms-container">
             <?php
             $current_user = wp_get_current_user();
-            if (user_can($current_user, 'administrator') || $_SESSION['switched_by_admin']) {
+            if (user_can($current_user, 'administrator') || !empty($_SESSION['switched_by_admin'])) {
                 // user is an admin
             ?>
                 <!-- Upload Section -->
@@ -99,7 +99,7 @@ function custom_snake_form_multiple()
             <?php } ?>
 
             <div id="snake-forms" class="snake-form-container">
-                <?php echo trim(get_snake_form_html($tests)); ?>
+                <?php echo trim(get_snake_form_html($tests, $recessives)); ?>
 
             </div>
         </div>
@@ -113,7 +113,7 @@ function custom_snake_form_multiple()
         <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 
         <script type="text/template" id="snake-form-template">
-            <?php echo trim(get_snake_form_html($tests)); ?>
+            <?php echo trim(get_snake_form_html($tests, $recessives)); ?>
      </script>
 
 
@@ -121,21 +121,24 @@ function custom_snake_form_multiple()
     }
 }
 
-function get_snake_form_html($tests)
+function get_snake_form_html($tests, $recessives = [])
 {
+    $show_action_buttons = count($tests) > 1 && !empty($recessives);
     ob_start(); ?>
     <div class="snake-form" data-index="0">
         <label>Reptile ID: <input type="text" class="snake-id-input" name="snake_id[0]" required></label><br>
         <label>Known Genetics: <input type="text" class="genetics-input" name="known_genetics[0]"></label><br><br>
+        <?php if ($show_action_buttons): ?>
         <div class="action-buttons">
             <button type="button" class="select-all-btn  button alt">Select All (Full Panel)</button>
             <button type="button" class="select-recessive-btn  button alt">Select Recessives</button>
             <button type="button" class="deselect-all-btn active  button alt">Deselect All</button>
         </div>
+        <?php endif; ?>
         <div class="snake-tests">
             <?php foreach ($tests as $test): ?>
                 <label><input type="checkbox" data-test-name="<?php echo esc_attr($test); ?>" class="genetic-test"
-                        name="genetic_tests[0][]" value="<?php echo esc_attr($test); ?>"><span>
+                        name="genetic_tests[0][]" value="<?php echo esc_attr($test); ?>"<?php if (count($tests) === 1) echo ' checked'; ?>><span>
                         <?php echo esc_html($test); ?></span></label>
             <?php endforeach; ?>
         </div>
@@ -175,7 +178,7 @@ add_filter('woocommerce_add_cart_item_data', function ($cart_item_data, $product
     $pricing_array = get_post_meta($product_id, '_snake_pricing', true) ?: '';
     $full_panel_threshold = get_post_meta($product_id, '_snake_full_panel_threshold', true) ?: '';
 
-    if (!empty($tests) && !empty($recessives) && !empty($pricing_array) && $full_panel_threshold != '') {
+    if (!empty($tests) && !empty($pricing_array) && $full_panel_threshold != '') {
         $priceMap =  $pricing_array;
         $fullPanelPrice = end($pricing_array);
 

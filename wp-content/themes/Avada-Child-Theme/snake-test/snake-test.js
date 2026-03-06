@@ -32,6 +32,9 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   // Initial state
+  document.querySelectorAll(".snake-form").forEach((form) => {
+    updateSnakePrice(form);
+  });
   checkValidation();
   if (document.getElementById("drop-zone")) {
     const fileInput = document.getElementById("csv-upload");
@@ -329,9 +332,10 @@ document.addEventListener("DOMContentLoaded", () => {
     if (e.target.classList.contains("genetic-test")) {
       const form = e.target.closest(".snake-form");
       const checked = form.querySelectorAll('input[type="checkbox"]:checked');
-      if (
-        form.querySelector(".select-recessive-btn").classList.contains("active")
-      ) {
+      const recessiveBtn = form.querySelector(".select-recessive-btn");
+      const deselectBtn = form.querySelector(".deselect-all-btn");
+
+      if (recessiveBtn && recessiveBtn.classList.contains("active")) {
         if (checked.length > recessives.length) {
           e.target.checked = false;
           return;
@@ -341,9 +345,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
 
-      if (
-        form.querySelector(".deselect-all-btn").classList.contains("active")
-      ) {
+      if (deselectBtn && deselectBtn.classList.contains("active")) {
         console.log(checked.length);
         if (checked.length > 10) {
           e.target.checked = false;
