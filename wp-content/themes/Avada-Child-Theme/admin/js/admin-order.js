@@ -85,8 +85,11 @@ jQuery(document).ready(function($) {
                 type: 'POST',
                 data: data,
                 timeout: 15000
-            })
+            });
+            $this.data('active-request', request);
+            request
                 .done(function(response) {
+                    if ($this.data('active-request') !== request) return;
                     if (response && response.success) {
                         $this.data('last-sent-value', currentValue);
                         $row.find('td:nth-child(2)').text('Complete');
@@ -95,15 +98,15 @@ jQuery(document).ready(function($) {
                     }
                 })
                 .fail(function() {
+                    if ($this.data('active-request') !== request) return;
                     $row.find('td:nth-child(2)').text('Pending');
                 })
                 .always(function() {
+                    if ($this.data('active-request') !== request) return;
                     $this.removeData('active-request');
                     $row.removeClass('process');
                     decreasePending($table);
                 });
-
-            $this.data('active-request', request);
         }, 300);
 
         $this.data('save-timer', timer);
