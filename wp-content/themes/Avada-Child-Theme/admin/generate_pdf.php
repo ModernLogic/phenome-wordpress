@@ -35,7 +35,7 @@ function my_generate_pdf()
 
     $html .= '<style>.logo { float: left; width: 40%; margin-right: 80px; } .text { float: left; width: 60%; padding-left: 20px; } .table { clear: both; width: 100%; margin-top: 20px; } body { font-family: Arial, sans-serif; } th { text-align:left; border-bottom: 1px solid; padding: 5px; } td { border-bottom: 1px solid; padding: 5px; } table {border-bottom: 1px solid;border-collapse: collapse;  } .longtext {clear: both;width: 100%;}</style>';
     $html .= '</head><body><div class="logo">';
-    $html .= '<img src="data:image/png;base64,' . base64_encode(file_get_contents(get_stylesheet_directory_uri() . '/admin/logo.jpg')) . '" alt="MzLogo" width="293" height="272">';
+    $html .= '<img src="data:image/jpeg;base64,' . base64_encode(file_get_contents(get_stylesheet_directory() . '/admin/logo.jpg')) . '" alt="MzLogo" width="293" height="272">';
     $html .= '</div>
       <div class="text">
         <p>Grey Rider Reptiles <br> PO Box 13 <br> West Sand Lake, NY 12196 <br> charlie@shedtesting.com</p>
