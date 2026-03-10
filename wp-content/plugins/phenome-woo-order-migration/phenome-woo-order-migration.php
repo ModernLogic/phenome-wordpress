@@ -3,7 +3,7 @@
 /**
  * Plugin Name: Phenome Woo Order Migration
  * Description: Upload 4 SQL exports and run incremental WooCommerce order migration (non-HPOS). Settings under Plugins menu.
- * Version: 1.0.0
+ * Version: 2.0.0
  * Author: Phenome
  * Requires at least: 5.9
  * Requires PHP: 7.4
@@ -13,7 +13,7 @@ if (! defined('ABSPATH')) {
 	exit;
 }
 
-define('PHENOME_WOO_MIGRATION_VERSION', '1.0.0');
+define('PHENOME_WOO_MIGRATION_VERSION', '2.0.0');
 define('PHENOME_WOO_MIGRATION_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('PHENOME_WOO_MIGRATION_PLUGIN_URL', plugin_dir_url(__FILE__));
 
