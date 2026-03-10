@@ -51,6 +51,7 @@ class Phenome_Woo_Order_Migration_Runner {
 	 * Run the full migration.
 	 *
 	 * @param array $args 'prefix', 'file_posts', 'file_postmeta', 'file_items', 'file_itemmeta'
+	 *   Each file_* value is an array of file infos (one or more per table); files are executed in array order.
 	 * @return true|WP_Error
 	 */
 	public function run( $args ) {
@@ -58,15 +59,28 @@ class Phenome_Woo_Order_Migration_Runner {
 		$this->set_prefix( $prefix );
 
 		$files = array(
-			'posts'    => isset( $args['file_posts'] ) ? $args['file_posts'] : null,
-			'postmeta' => isset( $args['file_postmeta'] ) ? $args['file_postmeta'] : null,
-			'items'    => isset( $args['file_items'] ) ? $args['file_items'] : null,
-			'itemmeta' => isset( $args['file_itemmeta'] ) ? $args['file_itemmeta'] : null,
+			'posts'    => isset( $args['file_posts'] ) ? $args['file_posts'] : array(),
+			'postmeta' => isset( $args['file_postmeta'] ) ? $args['file_postmeta'] : array(),
+			'items'    => isset( $args['file_items'] ) ? $args['file_items'] : array(),
+			'itemmeta' => isset( $args['file_itemmeta'] ) ? $args['file_itemmeta'] : array(),
 		);
 
-		foreach ( $files as $key => $file ) {
-			if ( empty( $file['tmp_name'] ) || ! is_uploaded_file( $file['tmp_name'] ) ) {
-				return new WP_Error( 'missing_file', sprintf( __( 'Missing or invalid SQL file: %s', 'phenome-woo-order-migration' ), $key ) );
+		// Normalize so each key is a list of file infos.
+		foreach ( $files as $key => $list ) {
+			if ( ! is_array( $list ) ) {
+				$list = array( $list );
+			}
+			$files[ $key ] = array_values( $list );
+		}
+
+		foreach ( $files as $key => $list ) {
+			if ( empty( $list ) ) {
+				return new WP_Error( 'missing_file', sprintf( __( 'Missing SQL file(s) for: %s', 'phenome-woo-order-migration' ), $key ) );
+			}
+			foreach ( $list as $file ) {
+				if ( empty( $file['tmp_name'] ) || ! is_uploaded_file( $file['tmp_name'] ) ) {
+					return new WP_Error( 'missing_file', sprintf( __( 'Missing or invalid SQL file: %s', 'phenome-woo-order-migration' ), $key ) );
+				}
 			}
 		}
 
@@ -75,10 +89,12 @@ class Phenome_Woo_Order_Migration_Runner {
 			return $err;
 		}
 
-		foreach ( $files as $file ) {
-			$err = $this->execute_sql_file( $file['tmp_name'] );
-			if ( is_wp_error( $err ) ) {
-				return $err;
+		foreach ( $files as $list ) {
+			foreach ( $list as $file ) {
+				$err = $this->execute_sql_file( $file['tmp_name'] );
+				if ( is_wp_error( $err ) ) {
+					return $err;
+				}
 			}
 		}
 
@@ -140,8 +156,30 @@ class Phenome_Woo_Order_Migration_Runner {
 	}
 
 	/**
-	 * Execute SQL file in one go via mysqli_multi_query.
-	 * Only use with trusted dump files. Consumes all result sets so the connection remains usable.
+	 * MySQL error codes to ignore during SQL import (duplicate / already-exists cases).
+	 * 1050 = Table already exists, 1061 = Duplicate key name, 1062 = Duplicate entry.
+	 */
+	const IGNORABLE_SQL_ERRORS = array( 1050, 1061, 1062 );
+
+	/**
+	 * Split SQL into statements on semicolon followed by newline (or end of string).
+	 * Semicolons inside strings do not split, since they are not followed by a newline.
+	 */
+	private function split_sql_statements( $sql ) {
+		$statements = array();
+		$chunks = preg_split( '/;\s*(\r\n|\r|\n)|;\s*$/s', $sql );
+		foreach ( $chunks as $stmt ) {
+			$stmt = trim( $stmt );
+			if ( $stmt !== '' ) {
+				$statements[] = $stmt;
+			}
+		}
+		return $statements;
+	}
+
+	/**
+	 * Execute SQL file statement-by-statement so we can ignore duplicate/table-exists errors.
+	 * Only use with trusted dump files.
 	 */
 	private function execute_sql_file( $filepath ) {
 		$sql = file_get_contents( $filepath );
@@ -154,18 +192,17 @@ class Phenome_Woo_Order_Migration_Runner {
 			return new WP_Error( 'db_driver', __( 'SQL import requires MySQLi. Your database connection is not MySQLi.', 'phenome-woo-order-migration' ) );
 		}
 
-		if ( ! mysqli_multi_query( $mysqli, $sql ) ) {
-			return new WP_Error( 'sql_error', sprintf( __( 'Import failed: %s', 'phenome-woo-order-migration' ), mysqli_error( $mysqli ) ) );
-		}
-
-		do {
-			if ( $result = mysqli_store_result( $mysqli ) ) {
-				mysqli_free_result( $result );
+		$statements = $this->split_sql_statements( $sql );
+		foreach ( $statements as $stmt ) {
+			mysqli_query( $mysqli, $stmt );
+			$errno = mysqli_errno( $mysqli );
+			if ( $errno === 0 ) {
+				continue;
 			}
-		} while ( mysqli_more_results( $mysqli ) && mysqli_next_result( $mysqli ) );
-
-		if ( mysqli_errno( $mysqli ) ) {
-			return new WP_Error( 'sql_error', sprintf( __( 'Import failed after multi_query: %s', 'phenome-woo-order-migration' ), mysqli_error( $mysqli ) ) );
+			if ( in_array( $errno, self::IGNORABLE_SQL_ERRORS, true ) ) {
+				continue;
+			}
+			return new WP_Error( 'sql_error', sprintf( __( 'Import failed: %s', 'phenome-woo-order-migration' ), mysqli_error( $mysqli ) ) );
 		}
 
 		return true;

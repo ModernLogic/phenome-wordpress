@@ -19,7 +19,7 @@ $success_msg = isset( $_GET['success'] ) && isset( $_GET['msg'] ) ? sanitize_tex
 ?>
 <div class="wrap">
 	<h1><?php esc_html_e( 'Woo Order Migration', 'phenome-woo-order-migration' ); ?></h1>
-	<p><?php esc_html_e( 'Select all 4 SQL export files at once. Each file is matched by filename (e.g. molo_wc_orders_posts.sql). Order does not matter.', 'phenome-woo-order-migration' ); ?></p>
+	<p><?php esc_html_e( 'Select SQL export files (at least one per table). You can upload multiple files per table to avoid max_allowed_packet (e.g. molo_wc_orders_postmeta_001.sql, molo_wc_orders_postmeta_002.sql). Files are matched by filename and run in alphabetical order.', 'phenome-woo-order-migration' ); ?></p>
 
 	<?php if ( $error_msg ) : ?>
 		<div class="notice notice-error"><p><?php echo esc_html( $error_msg ); ?></p></div>
@@ -41,10 +41,10 @@ $success_msg = isset( $_GET['success'] ) && isset( $_GET['msg'] ) ? sanitize_tex
 				</td>
 			</tr>
 			<tr>
-				<th scope="row"><label for="phenome_sql_files"><?php esc_html_e( 'SQL files (4 required)', 'phenome-woo-order-migration' ); ?></label></th>
+				<th scope="row"><label for="phenome_sql_files"><?php esc_html_e( 'SQL files (at least 4; multiple per table allowed)', 'phenome-woo-order-migration' ); ?></label></th>
 				<td>
 					<input type="file" name="phenome_sql_files[]" id="phenome_sql_files" accept=".sql,text/plain" multiple="multiple" />
-					<p class="description"><?php esc_html_e( 'Select 4 files. Filenames must contain the table name (e.g. molo_wc_orders_posts.sql, molo_wc_orders_postmeta.sql).', 'phenome-woo-order-migration' ); ?></p>
+					<p class="description"><?php esc_html_e( 'At least one file per table. Filenames must contain the table name (e.g. molo_wc_orders_posts.sql, molo_wc_orders_postmeta_001.sql, molo_wc_orders_postmeta_002.sql).', 'phenome-woo-order-migration' ); ?></p>
 					<p class="description"><strong><?php esc_html_e( 'Expected table names:', 'phenome-woo-order-migration' ); ?></strong> <?php echo esc_html( $expected_posts . ', ' . $expected_postmeta . ', ' . $expected_items . ', ' . $expected_itemmeta ); ?></p>
 				</td>
 			</tr>

@@ -2,7 +2,7 @@
 
 /**
  * Plugin Name: Phenome Woo Order Migration
- * Description: Upload 4 SQL exports and run incremental WooCommerce order migration (non-HPOS). Settings under Plugins menu.
+ * Description: Upload SQL exports (one or more per table) and run incremental WooCommerce order migration (non-HPOS). Supports multiple files per data type to avoid max_allowed_packet. Settings under Plugins menu.
  * Version: 2.0.0
  * Author: Phenome
  * Requires at least: 5.9
@@ -45,10 +45,11 @@ function phenome_woo_migration_upload_error_message($code, $filename = '')
 /**
  * Match uploaded files to roles by filename (e.g. molo_wc_orders_posts.sql -> posts).
  * Checks for table name suffix; longer suffixes first so postmeta matches before posts.
- * Validates per-file upload status (UPLOAD_ERR_OK) and optional .sql extension before accepting.
+ * Multiple files per table are allowed (e.g. molo_wc_orders_postmeta_001.sql, molo_wc_orders_postmeta_002.sql);
+ * they are executed in filename order. Validates per-file upload status and .sql extension.
  *
  * @param array $files $_FILES['phenome_sql_files'] with name, type, tmp_name, error, size arrays.
- * @return array|WP_Error Keys file_posts, file_postmeta, file_items, file_itemmeta with single-file array each.
+ * @return array|WP_Error Keys file_posts, file_postmeta, file_items, file_itemmeta; each value is an array of file infos (one or more).
  */
 function phenome_woo_migration_match_files_by_name($files)
 {
@@ -59,10 +60,10 @@ function phenome_woo_migration_match_files_by_name($files)
 		'file_posts'    => 'wc_orders_posts',
 	);
 	$matched = array(
-		'file_posts'    => null,
-		'file_postmeta' => null,
-		'file_items'    => null,
-		'file_itemmeta' => null,
+		'file_posts'    => array(),
+		'file_postmeta' => array(),
+		'file_items'    => array(),
+		'file_itemmeta' => array(),
 	);
 	$n = count($files['tmp_name']);
 	for ($i = 0; $i < $n; $i++) {
@@ -75,19 +76,17 @@ function phenome_woo_migration_match_files_by_name($files)
 			return new WP_Error('invalid_extension', sprintf(__('File "%s" must have a .sql extension.', 'phenome-woo-order-migration'), $files['name'][$i]));
 		}
 
+		$file_info = array(
+			'name'     => $files['name'][$i],
+			'type'     => $files['type'][$i],
+			'tmp_name' => $files['tmp_name'][$i],
+			'error'    => $files['error'][$i],
+			'size'     => $files['size'][$i],
+		);
 		$assigned = false;
 		foreach ($suffixes as $role => $suffix) {
 			if (strpos($name, $suffix) !== false) {
-				if ($matched[$role] !== null) {
-					return new WP_Error('duplicate_file', sprintf(__('More than one file matches "%s". Each file must match a different table (e.g. %s.sql).', 'phenome-woo-order-migration'), $suffix, $suffix));
-				}
-				$matched[$role] = array(
-					'name'     => $files['name'][$i],
-					'type'     => $files['type'][$i],
-					'tmp_name' => $files['tmp_name'][$i],
-					'error'    => $files['error'][$i],
-					'size'     => $files['size'][$i],
-				);
+				$matched[$role][] = $file_info;
 				$assigned = true;
 				break;
 			}
@@ -96,10 +95,14 @@ function phenome_woo_migration_match_files_by_name($files)
 			return new WP_Error('unrecognized_file', sprintf(__('Filename "%s" does not match any expected table name (e.g. prefix_wc_orders_posts.sql, prefix_wc_orders_postmeta.sql, prefix_wc_orders_items.sql, prefix_wc_orders_itemmeta.sql).', 'phenome-woo-order-migration'), $files['name'][$i]));
 		}
 	}
-	foreach ($matched as $role => $file) {
-		if ($file === null) {
-			return new WP_Error('missing_file', sprintf(__('No file matched the "%s" table. Ensure filenames contain the table name (e.g. molo_wc_orders_posts.sql).', 'phenome-woo-order-migration'), $suffixes[$role]));
+	foreach ($suffixes as $role => $suffix) {
+		if (empty($matched[$role])) {
+			return new WP_Error('missing_file', sprintf(__('No file matched the "%s" table. Ensure filenames contain the table name (e.g. molo_wc_orders_posts.sql or molo_wc_orders_postmeta_001.sql).', 'phenome-woo-order-migration'), $suffix));
 		}
+		// Sort by filename so e.g. _001, _002 run in order.
+		usort($matched[$role], function ($a, $b) {
+			return strcmp($a['name'], $b['name']);
+		});
 	}
 	return $matched;
 }
@@ -153,11 +156,11 @@ function phenome_woo_migration_handle_run()
 
 	$files = isset($_FILES['phenome_sql_files']) && is_array($_FILES['phenome_sql_files']['tmp_name']) ? $_FILES['phenome_sql_files'] : null;
 	$file_count = $files ? count($files['tmp_name']) : 0;
-	if ($file_count !== 4) {
+	if ($file_count < 4) {
 		wp_safe_redirect(add_query_arg(array(
 			'page'  => 'phenome-woo-order-migration',
 			'error' => 1,
-			'msg'   => rawurlencode(__('Please select exactly 4 SQL files (orders posts, postmeta, order items, order itemmeta).', 'phenome-woo-order-migration')),
+			'msg'   => rawurlencode(__('Please select at least 4 SQL files (one or more per table: orders posts, postmeta, order items, order itemmeta). You can use multiple files per table, e.g. molo_wc_orders_postmeta_001.sql, molo_wc_orders_postmeta_002.sql.', 'phenome-woo-order-migration')),
 		), admin_url('plugins.php')));
 		exit;
 	}
