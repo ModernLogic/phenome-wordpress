@@ -1,12 +1,12 @@
 /*
 
-Theme Name: Avada Child
+Theme Name: Phenome Theme
 
-Description: Child theme for Avada theme
+Description: Child theme for Phenome.com based on the Avada theme
 
-Author: ThemeFusion
+Author: Modern Logic
 
-Author URI: https://theme-fusion.com
+Author URI: https://modernlogic.io
 
 Template: Avada
 
@@ -16,26 +16,29 @@ Text Domain:  Avada
 
 */
 
-        .metacollapsible {
-            background-color: #777;
-            color: white;
-            cursor: pointer;
-            padding: 10px;
-            width: 100%;
-            border: none;
-            text-align: left;
-            outline: none;
-            font-size: 15px;
-        }
+.metacollapsible {
+  background-color: #777;
+  color: white;
+  cursor: pointer;
+  padding: 10px;
+  width: 100%;
+  border: none;
+  text-align: left;
+  outline: none;
+  font-size: 15px;
+}
 
-        .metaactive, .metacollapsible:hover {
-            background-color: #555;
-        }
+.metaactive,
+.metacollapsible:hover {
+  background-color: #555;
+}
 
-        .metacontent {
-            padding: 0 18px;
-            display: none;
-            overflow: hidden;
-            background-color: #f1f1f1;
-        }
-        .shop_table .product-thumbnail{display:none!important}
+.metacontent {
+  padding: 0 18px;
+  display: none;
+  overflow: hidden;
+  background-color: #f1f1f1;
+}
+.shop_table .product-thumbnail {
+  display: none !important;
+}
