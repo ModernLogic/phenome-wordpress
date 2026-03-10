@@ -38,7 +38,7 @@ function my_generate_pdf()
     $html .= '<img src="data:image/jpeg;base64,' . base64_encode(file_get_contents(get_stylesheet_directory() . '/admin/Phenome_Mark_Primary_FullColor_RGB.jpg')) . '" alt="MzLogo" width="183" height="230">';
     $html .= '</div>
       <div class="text">
-        <p>Grey Rider Reptiles <br> PO Box 13 <br> West Sand Lake, NY 12196 <br> charlie@phenome.com</p>
+        <p>Phenome <br> PO Box 13 <br> West Sand Lake, NY 12196 <br> hello@phenome.com</p>
       </div><div class="longtext"> <h4 style="text-align:center">Reptile Details</h4> </div>';
 
 
@@ -204,7 +204,7 @@ function my_generate_pdf()
         $html .= ob_get_clean();
     }
 
-    $html .= '<br><br> <div class="longtext"> <p>Please contact <strong>charlie@phenome.com</strong> if you have any questions regarding your results.</p> </div> </body> </html>';
+    $html .= '<br><br> <div class="longtext"> <p>Please contact <strong>hello@phenome.com</strong> if you have any questions regarding your results.</p> </div> </body> </html>';
 
     $dompdf = new Dompdf\Dompdf();
 
