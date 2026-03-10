@@ -10,39 +10,106 @@ function base64ToArrayBuffer(base64) {
 }
 
 jQuery(document).ready(function($) {
-    $('.add_result_meta').on('change', function(e) {
-        var a = $(this).closest('table');
-        $(a).block({
-            message: null,
-            overlayCSS: {
-                background: "#fff",
-                opacity: .6
-            }
-        });
-        e.preventDefault();
-        var $this=$(this);
-        $(this).closest('tr').addClass('process');
-        $(this).closest('tr').find('td:nth-child(2)').html('Complete');
-        var data = {
-            action: 'add_result_meta',
-            item_id:  $(this).attr('data-itemid'),
-            meta_key:  $(this).attr('data-type'),
-            meta_index:  $(this).attr('data-index'),
-            meta_parent:$(this).attr('data-parent'),
-            meta_value: $(this).val(),
-            nonce: custom_admin_ajax.nonce
-        };
+    function getPendingCount($table) {
+        return parseInt($table.data('pending-requests') || 0, 10);
+    }
 
-        $.post(custom_admin_ajax.ajax_url, data, function(response) {
-            if (response.success) {
-                $this.closest('tr').removeClass('process');
-                $(a).unblock();
-            } else {
-                $this.closest('tr').find('td:nth-child(2)').html('pending');
-                $this.closest('tr').removeClass('process');
-                $(a).unblock();
+    function increasePending($table) {
+        var current = getPendingCount($table);
+        if (current === 0) {
+            $table.block({
+                message: null,
+                overlayCSS: {
+                    background: "#fff",
+                    opacity: .6
+                }
+            });
+        }
+        $table.data('pending-requests', current + 1);
+    }
+
+    function decreasePending($table) {
+        var current = getPendingCount($table);
+        var next = Math.max(0, current - 1);
+        $table.data('pending-requests', next);
+        if (next === 0) {
+            $table.unblock();
+        }
+    }
+
+    $('.add_result_meta').each(function() {
+        var initialValue = $(this).val() || '';
+        $(this).data('last-sent-value', initialValue);
+    });
+
+    $('.add_result_meta').on('change', function(e) {
+        e.preventDefault();
+        var $this = $(this);
+        var $row = $this.closest('tr');
+        var $table = $this.closest('table');
+        var currentValue = $this.val() || '';
+        var lastSentValue = $this.data('last-sent-value') || '';
+        var existingTimer = $this.data('save-timer');
+
+        if (existingTimer) {
+            clearTimeout(existingTimer);
+        }
+
+        // Avoid sending duplicate no-op writes.
+        if (currentValue === lastSentValue) {
+            return;
+        }
+
+        var timer = setTimeout(function() {
+            var activeRequest = $this.data('active-request');
+            if (activeRequest && typeof activeRequest.abort === 'function') {
+                activeRequest.abort();
             }
-        });
+
+            $row.addClass('process');
+            $row.find('td:nth-child(2)').text('Saving...');
+            increasePending($table);
+
+            var data = {
+                action: 'add_result_meta',
+                item_id: $this.attr('data-itemid'),
+                meta_key: $this.attr('data-type'),
+                meta_index: $this.attr('data-index'),
+                meta_parent: $this.attr('data-parent'),
+                meta_value: currentValue,
+                nonce: custom_admin_ajax.nonce
+            };
+
+            var request = $.ajax({
+                url: custom_admin_ajax.ajax_url,
+                type: 'POST',
+                data: data,
+                timeout: 15000
+            });
+            $this.data('active-request', request);
+            request
+                .done(function(response) {
+                    if ($this.data('active-request') !== request) return;
+                    if (response && response.success) {
+                        $this.data('last-sent-value', currentValue);
+                        $row.find('td:nth-child(2)').text('Complete');
+                    } else {
+                        $row.find('td:nth-child(2)').text('Pending');
+                    }
+                })
+                .fail(function() {
+                    if ($this.data('active-request') !== request) return;
+                    $row.find('td:nth-child(2)').text('Pending');
+                })
+                .always(function() {
+                    if ($this.data('active-request') !== request) return;
+                    $this.removeData('active-request');
+                    $row.removeClass('process');
+                    decreasePending($table);
+                });
+        }, 300);
+
+        $this.data('save-timer', timer);
     });
     
 
