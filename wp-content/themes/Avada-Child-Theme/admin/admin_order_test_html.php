@@ -24,12 +24,22 @@ function handle_add_result_meta()
 		wc_update_order_item_meta($item_id, $final_meta_key, $meta_value);
 		wp_send_json_success('Meta added successfully');
 	} else {
-		$current_value = wc_get_order_item_meta($item_id, $final_meta_key, true);
-		if ($current_value !== '' && $current_value !== null) {
-			wc_delete_order_item_meta($item_id, $final_meta_key);
+		// When meta_value is empty, clear the meta (if any) and return success
+		if ($item_id <= 0 || $final_meta_key === '') {
+			wp_send_json_error('Invalid item or meta key');
 		}
 
-		wp_send_json_error('No line items found in order');
+		$current_value = wc_get_order_item_meta($item_id, $final_meta_key, true);
+		if ($current_value !== '' && $current_value !== null) {
+			$deleted = wc_delete_order_item_meta($item_id, $final_meta_key);
+			if ($deleted === false) {
+				wp_send_json_error('Failed to delete meta');
+			}
+			wp_send_json_success('Meta deleted successfully');
+		}
+
+		// No existing meta; nothing to delete but this is still a successful outcome
+		wp_send_json_success('No meta to delete');
 	}
 }
 add_action('wp_ajax_add_result_meta', 'handle_add_result_meta');
