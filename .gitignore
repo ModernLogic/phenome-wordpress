@@ -114,3 +114,4 @@ wp-content/plugins/*
 wp-content/.logs/
 autoupdater_maintenance_mode_enabled.tmp
 
+!wp-content/plugins/phenome-woo-order-migration
