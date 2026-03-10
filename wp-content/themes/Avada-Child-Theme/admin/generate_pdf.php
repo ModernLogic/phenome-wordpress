@@ -35,11 +35,11 @@ function my_generate_pdf()
 
     $html .= '<style>.logo { float: left; width: 40%; margin-right: 80px; } .text { float: left; width: 60%; padding-left: 20px; } .table { clear: both; width: 100%; margin-top: 20px; } body { font-family: Arial, sans-serif; } th { text-align:left; border-bottom: 1px solid; padding: 5px; } td { border-bottom: 1px solid; padding: 5px; } table {border-bottom: 1px solid;border-collapse: collapse;  } .longtext {clear: both;width: 100%;}</style>';
     $html .= '</head><body><div class="logo">';
-    $html .= '<img src="data:image/jpeg;base64,' . base64_encode(file_get_contents(get_stylesheet_directory() . '/admin/logo.jpg')) . '" alt="MzLogo" width="293" height="272">';
+    $html .= '<img src="data:image/jpeg;base64,' . base64_encode(file_get_contents(get_stylesheet_directory() . '/admin/Phenome_Mark_Primary_FullColor_RGB.jpg')) . '" alt="MzLogo" width="183" height="230">';
     $html .= '</div>
       <div class="text">
-        <p>Grey Rider Reptiles <br> PO Box 13 <br> West Sand Lake, NY 12196 <br> charlie@shedtesting.com</p>
-      </div><div class="longtext"> <h4 style="text-align:center">Snake Details</h4> </div>';
+        <p>Grey Rider Reptiles <br> PO Box 13 <br> West Sand Lake, NY 12196 <br> charlie@phenome.com</p>
+      </div><div class="longtext"> <h4 style="text-align:center">Reptile Details</h4> </div>';
 
 
 
@@ -60,7 +60,7 @@ function my_generate_pdf()
                 $known_genetics = sanitize_text_field($snake['genetics']);
 
                 $tests = $snake['tests'] ?? [];
-                echo '<tr><td><strong>Snake ID</strong></td><td style="text-align: right;">' . $snake_id . '</td></tr>';
+                echo '<tr><td><strong>Reptile ID</strong></td><td style="text-align: right;">' . $snake_id . '</td></tr>';
                 echo '<tr><td><strong>Known Genetics</strong></td><td style="text-align: right;">' . $known_genetics . '</td></tr>';
                 echo ' <tr >
                     <th>Test</th>
@@ -88,7 +88,7 @@ function my_generate_pdf()
                 $currentSnake = "";
 
                 foreach ($data['calc_data'] as $snakeitem) {
-                    if ($snakeitem['label'] === "Snake Identifier(User Defined)") {
+                    if ($snakeitem['label'] === "Reptile Identifier(User Defined)") {
                         $currentSnake = trim($snakeitem['value']);
                         if (empty($currentSnake)) {
                             continue;
@@ -204,7 +204,7 @@ function my_generate_pdf()
         $html .= ob_get_clean();
     }
 
-    $html .= '<br><br> <div class="longtext"> <p>Please contact <strong>charlie@shedtesting.com</strong> if you have any questions regarding your results.</p> </div> </body> </html>';
+    $html .= '<br><br> <div class="longtext"> <p>Please contact <strong>charlie@phenome.com</strong> if you have any questions regarding your results.</p> </div> </body> </html>';
 
     $dompdf = new Dompdf\Dompdf();
 

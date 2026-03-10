@@ -48,7 +48,7 @@ function custom_order_export_page()
 
 
 
-    ?>
+?>
     <div class="wrap">
         <h1>Order Export</h1>
         <form method="post" action="admin-post.php?action=custom_order_export">
@@ -126,7 +126,7 @@ function custom_order_export_page()
             echo "<h2>Records not found</h2>";
         }
         ?>
-      <?php /*?>  
+        <?php /*?>  
       <script>
             jQuery(function ($) {
                 // Make the lists sortable and connect them
@@ -183,9 +183,9 @@ function custom_order_export_page()
                 height: 40px;
                 margin: 5px;
             }
-        </style><?php */?>  
+        </style><?php */ ?>
     </div>
-    <?php
+<?php
 }
 
 // Handle export logic
@@ -229,7 +229,7 @@ function handle_custom_order_export()
     $data = [];
 
     $orders = wc_get_orders($args);
-   
+
     // Filter orders by multiple product IDs
     $filtered_orders = array_filter($orders, function ($order) use ($product_ids) {
         foreach ($order->get_items() as $item) {
@@ -239,7 +239,7 @@ function handle_custom_order_export()
         }
         return false;
     });
-   
+
     if (count($filtered_orders) > 0) {
         foreach ($filtered_orders as $order) {
             // Get order ID
@@ -267,13 +267,11 @@ function handle_custom_order_export()
                         foreach ($tests as $test) {
                             $row['mutation' . $i] = preg_replace('/[\(\)]/', '', $test);
                             $i++;
-
                         }
-  $data[] = $row;
+                        $data[] = $row;
                     }
-                  
                 } else {
-                   $itemMeta = wc_get_order_item_meta($item_id, 'ccb_calculator');
+                    $itemMeta = wc_get_order_item_meta($item_id, 'ccb_calculator');
                     if (isset($itemMeta['product_id']) && isset($itemMeta['calc_data'])) {
                         $groupedData = [];
                         $currentSnake = "";
@@ -303,7 +301,7 @@ function handle_custom_order_export()
 
                             foreach ($details as $detail) {
                                 $label = $detail['label'];
-                                if ( $label === "Comment" || $label === "Total" || $label === "SNAKES/TESTS") {
+                                if ($label === "Comment" || $label === "Total" || $label === "SNAKES/TESTS") {
                                     continue;
                                 }
 
@@ -352,7 +350,7 @@ function handle_custom_order_export()
                 }
             }
         }
-    
+
         // Step 1: Determine all unique mutations and assign counters
         $uniqueMutations = [];
         foreach ($data as $row) {
@@ -368,14 +366,14 @@ function handle_custom_order_export()
                 }
             }
         }
-   
+
         $header = array_merge(
             array_map(fn($mutation, $counter) => ($counter ? $mutation . $counter : $mutation), array_keys($uniqueMutations), $uniqueMutations),
             ['Shade Id', 'Customer', 'Known Genetics']
         );
         $header2 = array_merge(
             array_map(fn($mutation, $counter) => ($counter ? $mutation : $mutation), array_keys($uniqueMutations), $uniqueMutations),
-             ['Shade Id', 'Customer', 'Known Genetics']
+            ['Shade Id', 'Customer', 'Known Genetics']
         );
         // Remove any duplicate "Shade Id" and "Customer" from the header
         $header = array_unique($header);
@@ -424,7 +422,7 @@ function handle_custom_order_export()
         // Redirect to download file
         wp_redirect(wp_upload_dir()['baseurl'] . '/order_exports/' . $file_name);
     } else {
-        wp_redirect('https://shedtesting.com/wp-admin/admin.php?page=custom_order_export&notfound=1');
+        wp_redirect(site_url('/wp-admin/admin.php?page=custom_order_export&notfound=1'));
     }
     exit;
 }
