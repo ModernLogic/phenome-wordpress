@@ -245,12 +245,10 @@ class Phenome_Woo_Order_Migration_Runner {
 		$post_map = $this->post_id_map();
 		$item_map = $this->item_id_map();
 
-		$this->wpdb->query( "DROP TABLE IF EXISTS `{$post_map}`" );
-		$this->wpdb->query( "DROP TABLE IF EXISTS `{$item_map}`" );
-		$this->wpdb->query( "CREATE TABLE `{$post_map}` ( old_id BIGINT, new_id BIGINT )" );
-		$this->wpdb->query( "CREATE TABLE `{$item_map}` ( old_id BIGINT, new_id BIGINT )" );
-		$this->wpdb->query( "ALTER TABLE `{$post_map}` ADD PRIMARY KEY (old_id)" );
-		$this->wpdb->query( "ALTER TABLE `{$item_map}` ADD PRIMARY KEY (old_id)" );
+		// Ensure mapping tables exist and keep their data across runs.
+		// Use IF NOT EXISTS and define the primary key inline so existing tables are preserved.
+		$this->wpdb->query( "CREATE TABLE IF NOT EXISTS `{$post_map}` ( old_id BIGINT PRIMARY KEY, new_id BIGINT )" );
+		$this->wpdb->query( "CREATE TABLE IF NOT EXISTS `{$item_map}` ( old_id BIGINT PRIMARY KEY, new_id BIGINT )" );
 
 		if ( $this->wpdb->last_error ) {
 			return new WP_Error( 'sql_error', $this->wpdb->last_error );
