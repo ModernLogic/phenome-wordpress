@@ -13,13 +13,21 @@ function handle_add_result_meta()
 	$item_id = intval($_POST['item_id']);
 	$meta_value = sanitize_text_field($_POST['meta_value']);
 	$meta_parent = intval($_POST['meta_parent']);
+	$final_meta_key = $meta_key . '_' . $meta_parent . '_' . $meta_index;
 
 	// Assuming you want to add meta to the first line item
 	if ($meta_value != '') {
-		wc_update_order_item_meta($item_id, $meta_key . '_' . $meta_parent . '_' . $meta_index, $meta_value);
+		$current_value = wc_get_order_item_meta($item_id, $final_meta_key, true);
+		if ((string) $current_value === (string) $meta_value) {
+			wp_send_json_success('Meta unchanged');
+		}
+		wc_update_order_item_meta($item_id, $final_meta_key, $meta_value);
 		wp_send_json_success('Meta added successfully');
 	} else {
-		wc_delete_order_item_meta($item_id, $meta_key . '_' . $meta_parent . '_' . $meta_index);
+		$current_value = wc_get_order_item_meta($item_id, $final_meta_key, true);
+		if ($current_value !== '' && $current_value !== null) {
+			wc_delete_order_item_meta($item_id, $final_meta_key);
+		}
 
 		wp_send_json_error('No line items found in order');
 	}
@@ -29,8 +37,6 @@ add_action('wp_ajax_add_result_meta', 'handle_add_result_meta');
 add_filter('woocommerce_order_item_get_formatted_meta_data', 'unset_specific_order_item_meta_data', 10, 2);
 function unset_specific_order_item_meta_data($formatted_meta, $lineitem)
 {
-	global $wpdb;
-
 	/*
 // Only on emails notifications
 if(is_admin() || is_wc_endpoint_url()) {
@@ -47,46 +53,12 @@ if(is_admin() || is_wc_endpoint_url()) {
 
 	if (isset($olddata) && $olddata != '') {
 
-		$post_id = $_GET['post']; // Replace with your specific post ID
-		$meta_key = '%snake_record_%';
-		$meta_value_pattern = '%a:1:%';
-
-		// Create the SQL query
-		$query = $wpdb->prepare(
-			"
-    SELECT meta_key,meta_value
-    FROM {$wpdb->postmeta}
-    WHERE post_id = %d
-    AND meta_key LIKE %s
-    AND meta_value LIKE %s
-    ",
-			$post_id,
-			$meta_key,
-			$meta_value_pattern
-		);
-		//print_r($query);
-		// Execute the query
-		$results = $wpdb->get_results($query);
-
-		if ($results !== null) {
-			foreach ($results as $result) {
-				$meta_value = $result->meta_value;
-				// Unserialize the meta value if needed
-				$meta_array = maybe_unserialize($meta_value);
-				echo $result->meta_key . ':' . $meta_array[0], '<br/>';
-				// Now you can work with the meta array
-				// print_r($meta_array); // For debugging
-			}
-		}
-
 		$ccb_calculator = wc_get_order_item_meta($lineitem->get_id(), 'ccb_calculator');
 		if (!isset($ccb_calculator['product_id']) && !isset($ccb_calculator['calc_data'])) {
 			//print_r($item->order_item_id);
 			$dd = [];
 			foreach ($formatted_meta as $key => $details) {
-
 				$dd[] = [$details->key, $details->value];
-
 			}
 			// Initialize an empty associative array to hold the grouped data
 			$groupedData = [];
@@ -193,67 +165,64 @@ function update_testdetails()
 	$snakes = wc_get_order_item_meta($item_id, 'snakes_panel', true);
 
 	if (wc_update_order_item_meta($item_id, '_snakes_panel_backup', $snakes) == '') {
-		wc_update_order_item_meta($item_id, '_snakes_panel_backup', $snakes );
-
+		wc_update_order_item_meta($item_id, '_snakes_panel_backup', $snakes);
 	}
-	if($snakes!=''){
-			if ($sub_key != '' && $item_type == 'tests') { 
-				$snakes[$key]['tests'][$sub_key] = $value;
-			}else {
-				$snakes[$key][trim($item_type)] = $value;
-			}
-	wc_update_order_item_meta($item_id, 'snakes_panel', $snakes);
-	}else{
-	
-	$data = wc_get_order_item_meta($item_id, 'ccb_calculator');
-	if (wc_update_order_item_meta($item_id, '_ccb_calculator_backup', $data) == '') {
-		wc_update_order_item_meta($item_id, '_ccb_calculator_backup', $data);
+	if ($snakes != '') {
+		if ($sub_key != '' && $item_type == 'tests') {
+			$snakes[$key]['tests'][$sub_key] = $value;
+		} else {
+			$snakes[$key][trim($item_type)] = $value;
+		}
+		wc_update_order_item_meta($item_id, 'snakes_panel', $snakes);
+	} else {
 
-	}
-
-	if ($sub_key != '' && $item_type == 'subtest') { // Check if underscore exists
-		//$parts = explode('_', $key); // Split the string by underscore
-		//$key = $parts[0];
-		$subkey = $sub_key;                              // Array: [0 => "10", 1 => "1"]
-		// Extract the part inside parentheses
-		$subtests = $data['calc_data'][$key];
-		// Split the string by commas
-
-		// Extract the part inside parentheses
-		preg_match('/\((.*)\)\s*(\d+)/', $subtests['value'], $matches);
-
-		$attributes = [];
-		$number = null;
-
-		if (!empty($matches)) {
-			// Get the attributes and split them
-			$innerString = $matches[1]; // Content inside parentheses
-			$number = $matches[2]; // The number outside parentheses
-
-			// Match individual attributes, handling possible nested parentheses
-			preg_match_all('/([^,]+(?:\([^)]+\))?)/', $innerString, $attributeMatches);
-
-			if (!empty($attributeMatches[1])) {
-				$attributes = array_map('trim', $attributeMatches[1]); // Clean up spaces
-			}
+		$data = wc_get_order_item_meta($item_id, 'ccb_calculator');
+		if (wc_update_order_item_meta($item_id, '_ccb_calculator_backup', $data) == '') {
+			wc_update_order_item_meta($item_id, '_ccb_calculator_backup', $data);
 		}
 
-		// Print the results
-		$attributes[$subkey] = $value;
-		$updatedvalue = implode(', ', $attributes);
-		$makevalue = '(' . $updatedvalue . ') ' . $number;
-	} else {
-		$makevalue = $value;
-	}
-	$data['calc_data'][$key]['value'] = $makevalue;
-	$updateddata = $data;
-	wc_update_order_item_meta($item_id, 'ccb_calculator', $updateddata);
+		if ($sub_key != '' && $item_type == 'subtest') { // Check if underscore exists
+			//$parts = explode('_', $key); // Split the string by underscore
+			//$key = $parts[0];
+			$subkey = $sub_key;                              // Array: [0 => "10", 1 => "1"]
+			// Extract the part inside parentheses
+			$subtests = $data['calc_data'][$key];
+			// Split the string by commas
+
+			// Extract the part inside parentheses
+			preg_match('/\((.*)\)\s*(\d+)/', $subtests['value'], $matches);
+
+			$attributes = [];
+			$number = null;
+
+			if (!empty($matches)) {
+				// Get the attributes and split them
+				$innerString = $matches[1]; // Content inside parentheses
+				$number = $matches[2]; // The number outside parentheses
+
+				// Match individual attributes, handling possible nested parentheses
+				preg_match_all('/([^,]+(?:\([^)]+\))?)/', $innerString, $attributeMatches);
+
+				if (!empty($attributeMatches[1])) {
+					$attributes = array_map('trim', $attributeMatches[1]); // Clean up spaces
+				}
+			}
+
+			// Print the results
+			$attributes[$subkey] = $value;
+			$updatedvalue = implode(', ', $attributes);
+			$makevalue = '(' . $updatedvalue . ') ' . $number;
+		} else {
+			$makevalue = $value;
+		}
+		$data['calc_data'][$key]['value'] = $makevalue;
+		$updateddata = $data;
+		wc_update_order_item_meta($item_id, 'ccb_calculator', $updateddata);
 	}
 	wp_send_json_success(['message' => 'Meta updated successfully']);
 
 	//wp_send_json($_POST);
 	die();
-
 }
 
 add_action('wp_ajax_get_latest_test_options', 'get_latest_test_options');
@@ -261,7 +230,7 @@ add_action('wp_ajax_nopriv_get_latest_test_options', 'get_latest_test_options');
 
 function get_latest_test_options()
 {
-	
+
 	$selectTest = get_post_meta(intval($_GET['id']), '_snake_tests', true);
 	$data = array_map(function ($option) {
 		return [
@@ -284,7 +253,6 @@ function get_test_options()
 	$stm_ccb_form_settings = json_decode(get_option('ccb_demo_import_content'), true);
 	if ($_GET['type'] == "subtest") {
 		$selectTest = $stm_ccb_form_settings['calculators'][0]['ccb_fields'][1]['groupElements'][4]['options'];
-
 	} else {
 		$selectTest = $stm_ccb_form_settings['calculators'][0]['ccb_fields'][1]['groupElements'][3]['options'];
 	}
@@ -308,7 +276,7 @@ add_action('woocommerce_order_item_line_item_html', 'custom_link_after_order_ite
 function custom_link_after_order_itemmeta($item_id, $item, $product)
 {
 	global $post;
-$product_id = $item->get_product_id();
+	$product_id = $item->get_product_id();
 	if ($product->get_id() && is_admin()) {
 		$currentSnake = "";
 		$options = [
@@ -327,7 +295,7 @@ $product_id = $item->get_product_id();
 			"Shed Not Received",
 		];
 		$snakes = wc_get_order_item_meta($item_id, 'snakes_panel', true);
-		
+
 		if (!empty($snakes)) {
 			echo '<h3>Snake Genetic Test Info</h3>';
 
@@ -364,7 +332,7 @@ $product_id = $item->get_product_id();
 					$currenttesresult = wc_get_order_item_meta($item_id, '_sub_test_result_' . $i . '_' . $key);
 					echo '<tr><td>';
 
-					echo '<a class="editable" href="#" id="test__data_' . $i . '_' . $ii . '" data-source="/wp-admin/admin-ajax.php?action=get_latest_test_options&type=subtest&id='.$product_id.'" data-type="select" data-itemid="' . $item_id . '" data-item_type="tests" data-pk="' . $mkey . '" data-subkey="' . $key . '"  data-title="Select Test">' . $test_name . '</a>';
+					echo '<a class="editable" href="#" id="test__data_' . $i . '_' . $ii . '" data-source="/wp-admin/admin-ajax.php?action=get_latest_test_options&type=subtest&id=' . $product_id . '" data-type="select" data-itemid="' . $item_id . '" data-item_type="tests" data-pk="' . $mkey . '" data-subkey="' . $key . '"  data-title="Select Test">' . $test_name . '</a>';
 
 					echo '</td><td>' . ($currenttesresult != '' ? 'Complete' : 'Pending') . '</td><td style="text-align: right;">'; ?>
 					<select data-parent="<?php echo $i; ?>" data-index="<?php echo $key; ?>" data-itemid="<?php echo $item_id; ?>"
@@ -377,7 +345,7 @@ $product_id = $item->get_product_id();
 						}
 						?>
 					</select>
-					<?php echo '</td></tr>';
+				<?php echo '</td></tr>';
 					$ii++;
 				}
 				echo '</td></tr></tbody></table>';
@@ -415,7 +383,6 @@ $product_id = $item->get_product_id();
 				if (!empty($currentSnake)) {
 					$snakeitem['key'] = $key;
 					$groupedData[$currentSnake][] = $snakeitem;
-
 				}
 			}
 
@@ -446,10 +413,8 @@ $product_id = $item->get_product_id();
 											}
 											if ($detail['label'] == "Select Test") {
 												echo '<p><span style="color: #a99bff!important;">Main Test</span><p>';
-
 											} elseif ($detail['label'] == "Pick 3 Tests") {
 												echo '<p><span style="color: #a99bff!important;">3 Tests</span><p>';
-
 											} else {
 												echo '<p><span style="color: #a99bff!important;">Secondary Test</span><p>';
 											}
@@ -485,7 +450,7 @@ $product_id = $item->get_product_id();
 														}
 														?>
 													</select>
-													<?php echo '</td></tr>';
+										<?php echo '</td></tr>';
 												}
 											endforeach;
 											echo "</tbody></table>";
@@ -499,7 +464,6 @@ $product_id = $item->get_product_id();
 
 										if ($detail['label'] == "Select Test") {
 											echo '<p><span style="color: #a99bff!important;">Main Test</span><p>';
-
 										} else {
 											echo '<p><span style="color: #a99bff!important;">Secondary Test</span><p>';
 										}
@@ -532,14 +496,14 @@ $product_id = $item->get_product_id();
 												}
 												?>
 											</select>
-											<?php echo '</td></tr>';
+										<?php echo '</td></tr>';
 										}
 										echo "</tbody></table>";
 
 										?>
 									<?php } else {
 
-										?>
+									?>
 										<?php /* if($post->ID == '4340'){ ?>
 																			  <?php echo '<p><span>'.$detail['label'].'</span><span><a class="editable" href="#" id="test__data_'.$i.'_'.$ii.'" data-type="text"  data-itemid="'.$item_id.'" data-pk="'.$detail['key'].'"   data-title="Enter '.$detail['label'].'">'.$detail['value'].'</a></span></p>';?>
 																			  <?php }else{?>
@@ -566,7 +530,7 @@ $product_id = $item->get_product_id();
 									// }else{
 									// 	echo $value;
 									// }
-				
+
 									echo '</td><td>' . ($currenttesresult != '' ? 'Complete' : 'Pending') . '</td><td style="text-align: right;">'; ?>
 									<select data-parent="<?php echo $i; ?>" data-index="0" data-itemid="<?php echo $item_id; ?>"
 										data-type="_main_test_result" class="add_result_meta" name="main_test_results">
@@ -578,7 +542,7 @@ $product_id = $item->get_product_id();
 										}
 										?>
 									</select>
-									<?php echo '</td></tr>';
+								<?php echo '</td></tr>';
 									echo "</tbody></table>";
 								} ?>
 							</div>
@@ -589,8 +553,7 @@ $product_id = $item->get_product_id();
 
 			<?php endforeach; ?>
 
-		<?php }
-
+			<?php }
 	}
 }
 
@@ -832,60 +795,60 @@ function wc_display_item_meta($item, $args = [])
 	);
 	$data = $item->get_meta('ccb_calculator');
 	$currentSnake = "";
-		
-		$snakes = $item->get_meta('snakes_panel');
-		if (!empty($snakes)) {
-			$item_id = $item->get_id();
-			echo '<h3>Snake Genetic Test Info</h3>';
+
+	$snakes = $item->get_meta('snakes_panel');
+	if (!empty($snakes)) {
+		$item_id = $item->get_id();
+		echo '<h3>Snake Genetic Test Info</h3>';
 
 
-			$i = 1;
-			foreach ($snakes as $snake) {
-				$snake_id = sanitize_text_field($snake['id']);
-				$known_genetics = sanitize_text_field($snake['genetics']);
-				$test_price = wc_price(floatval($snake['price']));
+		$i = 1;
+		foreach ($snakes as $snake) {
+			$snake_id = sanitize_text_field($snake['id']);
+			$known_genetics = sanitize_text_field($snake['genetics']);
+			$test_price = wc_price(floatval($snake['price']));
 
-				$tests = $snake['tests'] ?? [];
-				echo '
+			$tests = $snake['tests'] ?? [];
+			echo '
 					<tr>
 					<td colspan="6">
 						<div class="metacollapsible__wrap">
 							<button type="button" class="metacollapsible">SNAKES/TESTS #' . $i . '</button>
 							<div class="metacontent">';
-				echo '<p><span>Snake Id</span><span>' . $snake_id .'</span></p>';
-				echo '<p><span>Known Genetics</span><span>' . $known_genetics . '</span></p>';
-				echo '<p><span>Price</span><span>' . $test_price . '</span></p>';
+			echo '<p><span>Snake Id</span><span>' . $snake_id . '</span></p>';
+			echo '<p><span>Known Genetics</span><span>' . $known_genetics . '</span></p>';
+			echo '<p><span>Price</span><span>' . $test_price . '</span></p>';
 
-				echo "<table>";
-				echo "<thead>
+			echo "<table>";
+			echo "<thead>
 										   <tr>
                                                 <th style='color:#fff'>Test</th>
                                                 <th style='color:#fff'>Status</th>
                                                 <th style='text-align: right;color:#fff'>Result</th>
                                             </tr>
 										</thead><tbody>";
-				$ii = 1;
-				foreach ($tests as $key => $test) {
-					$test_name = sanitize_text_field($test);
+			$ii = 1;
+			foreach ($tests as $key => $test) {
+				$test_name = sanitize_text_field($test);
 
-					$currenttesresult = wc_get_order_item_meta($item_id, '_sub_test_result_' . $i . '_' . $key);
-					echo '<tr><td style="color:#fff">' . $test_name . '</td><td>' . ($currenttesresult != '' ? 'Complete' : 'Pending') . '</td><td style="text-align: right;color:#fff">'; ?>
-										<?php echo $currenttesresult; ?>
-										<?php echo '</td></tr>';
-				
-					$ii++;
-				}
-				echo '</tbody></table>';
-				echo '</div>';
-				$i++;
+				$currenttesresult = wc_get_order_item_meta($item_id, '_sub_test_result_' . $i . '_' . $key);
+				echo '<tr><td style="color:#fff">' . $test_name . '</td><td>' . ($currenttesresult != '' ? 'Complete' : 'Pending') . '</td><td style="text-align: right;color:#fff">'; ?>
+				<?php echo $currenttesresult; ?>
+			<?php echo '</td></tr>';
+
+				$ii++;
 			}
-
-			echo '</div>
-					</td>
-				</tr>';
+			echo '</tbody></table>';
+			echo '</div>';
+			$i++;
 		}
 
-	if (isset($data['product_id']) && isset($data['calc_data']) || !empty($snakes) ) {
+		echo '</div>
+					</td>
+				</tr>';
+	}
+
+	if (isset($data['product_id']) && isset($data['calc_data']) || !empty($snakes)) {
 		echo '<style>
 	:root {
         color-scheme: light dark;
@@ -966,7 +929,7 @@ padding-bottom: 10px;
     }
     </style>';
 	}
-		if (isset($data['product_id']) && isset($data['calc_data'])) {
+	if (isset($data['product_id']) && isset($data['calc_data'])) {
 
 		$item_id = $item->get_id();
 		$groupedData = [];
@@ -1023,10 +986,8 @@ padding-bottom: 10px;
 									}
 									if ($detail['label'] == "Select Test") {
 										echo '<p><span style="color: #a99bff!important;">Main Test</span><p>';
-
 									} elseif ($detail['label'] == "Pick 3 Tests") {
 										echo '<p><span style="color: #a99bff!important;">3 Tests</span><p>';
-
 									} else {
 										echo '<p><span style="color: #a99bff!important;">Secondary Test</span><p>';
 									}
@@ -1043,7 +1004,7 @@ padding-bottom: 10px;
 
 										echo '<tr><td style="color:#fff">' . $snakeitem . '</td><td>' . ($currenttesresult != '' ? 'Complete' : 'Pending') . '</td><td style="text-align: right;color:#fff">'; ?>
 										<?php echo $currenttesresult; ?>
-										<?php echo '</td></tr>';
+									<?php echo '</td></tr>';
 									endforeach;
 									echo "</tbody></table>";
 
@@ -1055,7 +1016,6 @@ padding-bottom: 10px;
 
 									if ($detail['label'] == "Select Test") {
 										echo '<p><span style="color: #a99bff!important;">Main Test </span><p>';
-
 									} else {
 										echo '<p><span style="color: #a99bff!important;">Secondary Test</span><p>';
 									}
@@ -1126,7 +1086,7 @@ function render_email_meta_box($post)
 			<?php esc_html_e('Send email notification on order completed', 'your-text-domain'); ?>
 		</label>
 	</div>
-	<?php
+<?php
 }
 function prevent_email_for_specific_product_customer_completed_order_func($recipient, $order)
 {
@@ -1136,7 +1096,6 @@ function prevent_email_for_specific_product_customer_completed_order_func($recip
 	}
 
 	return $recipient;
-
 }
 
 add_filter('woocommerce_email_recipient_customer_completed_order', 'prevent_email_for_specific_product_customer_completed_order_func', 10, 2);
